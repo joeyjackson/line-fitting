@@ -3,24 +3,48 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def main():
-    slope = 20
+    slope = (0,1,1)
     y_inter = 30
-    x, y = generate_noisy_trendline_points(slope=slope, y_inter=y_inter)
-    plt.scatter(x, y)
+    x_p, y_p = generate_noisy_trendline_points(slope=slope, y_inter=y_inter)
+    plt.scatter(x_p, y_p)
+    bottom, top = plt.ylim()
+    left, right = plt.xlim()
 
-    m = np.array([[0, 0.5]])
+    m = np.array([[0, 1]])
     b = np.array([[30]])
-    x_1 = np.linspace(0, 100, 100).reshape((1, 100))
-    x_2 = x_1 * x_1
-    y_1 = m.dot(np.vstack((x_1, x_2))) + b
-    plt.plot(x_1.reshape(-1), y_1.reshape(-1))
+
+    x = np.array([np.linspace(left, right, int(right - left))])
+    x_3 = np.power(x, 3)
+
+    y = m.dot(np.vstack((x, x_3))) + b
+
+    x = x.reshape(-1)
+    y = y.reshape(-1)
+    plt.plot(x, y)
+    plt.ylim(bottom, top)
     plt.show()
 
 
-def generate_noisy_trendline_points(num_pts=100, variation=50, slope=1, y_inter=0):
+def generate_noisy_trendline_points(num_pts=100, variation=0.1, slope=1, y_inter=0):
+    if type(slope) == float or type(slope) == int:
+        slope = [slope]
+    else:
+        slope = list(slope)
+
     x = np.random.normal(100, 50, num_pts)
-    noise = np.random.normal(0, variation, num_pts)
-    y = (slope * x.astype(np.double) + y_inter) + noise
+    x_terms = []
+    for i in range(len(slope)):
+        x_terms.append(np.power(x, i+1))
+
+    m = np.array([slope])
+    b = np.array([[y_inter]])
+
+    y = (m.dot(np.vstack(x_terms)) + b)
+
+    noise = np.random.normal(0, (np.max(y) - np.min(y)) * variation, num_pts)
+
+    y += noise
+
     return x, y
 
 
